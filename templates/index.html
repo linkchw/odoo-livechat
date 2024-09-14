@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Chat with AI Model</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .chat-container {
+            max-width: 900px;
+            margin: 50px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #f1f3f5;
+        }
+
+        .chat-message {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .user-question {
+            background-color: #e7f1ff;
+            text-align: left;
+        }
+
+        .ai-response {
+            background-color: #d4edda;
+            text-align: right;
+        }
+
+        .input-group {
+            margin-top: 20px;
+        }
+
+        .input-field {
+            border-radius: 25px;
+            padding: 10px;
+        }
+
+        .btn-send {
+            border-radius: 25px;
+            padding: 10px 20px;
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .btn-send:hover {
+            background-color: #0056b3;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container chat-container">
+        <div class="chat-title">
+            Live Chat with AI Model
+        </div>
+
+        <div id="chat-box" class="chat-box">
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="question" class="form-control input-field" placeholder="Type your question here">
+            <button onclick="sendQuestion()" class="btn btn-send">Send</button>
+        </div>
+    </div>
+
+    <div class="footer-text">
+        &copy; 2024 AI Chat Application
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        function sendQuestion() {
+            const question = document.getElementById('question').value;
+            if (!question) return; 
+
+            const chatBox = document.getElementById('chat-box');
+            const userMessage = document.createElement('div');
+            userMessage.classList.add('chat-message', 'user-question');
+            userMessage.innerHTML = `<strong>You:</strong> ${question}`;
+            chatBox.appendChild(userMessage);
+            chatBox.scrollTop = chatBox.scrollHeight;  
+
+            fetch('/send_question', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ question: question }),
+            }).then(response => response.json()).then(data => {
+                console.log('Question sent:', data);
+                document.getElementById('question').value = ''; 
+                pollAnswer();  
+            });
+        }
+
+        function pollAnswer() {
+            setTimeout(() => {
+                fetch('/get_answer').then(response => response.json()).then(data => {
+                    if (data.answer) {
+                        const chatBox = document.getElementById('chat-box');
+                        
+                        const aiMessage = document.createElement('div');
+                        aiMessage.classList.add('chat-message', 'ai-response');
+                        aiMessage.innerHTML = `<strong>AI:</strong> ${data.answer.content} <br><small>${new Date(data.answer.time * 1000).toLocaleTimeString()}</small>`;
+                        
+                        chatBox.appendChild(aiMessage);
+                        chatBox.scrollTop = chatBox.scrollHeHight;  
+                    } else {
+                        pollAnswer();  
+                    }
+                });
+            }, 2000);  
+        }
+    </script>
+
+</body>
+
+</html>
+
